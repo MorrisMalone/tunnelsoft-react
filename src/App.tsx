@@ -1,46 +1,34 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { clamp, fetchImage } from './utils';
+import { useState } from 'react';
 
-import Image from './components/Image/Image';
+import Carousel from 'react-bootstrap/Carousel';
+import AutoRefreshImage from './components/AutoRefreshImage/AutoRefreshImage';
 
 import './App.scss';
 
 import imageUrls from './static/imageUrls.json';
 
 function App() {
-    const [selectedIndex, setSelectedIndex] = useState(0);
-    const [imageUrl, setImageUrl] = useState(imageUrls[selectedIndex]);
-    const timerId = useRef(0);
+    const [index, setIndex] = useState(0);
+    const delay = 3000;
 
-    function handleSlide(step: number) {
-        setSelectedIndex(clamp(selectedIndex + step, 0, imageUrls.length - 1));
+    function handleSelect(selectedIndex: number) {
+        setIndex(selectedIndex);
     }
-
-    const callback = useCallback(
-        function setImage() {
-            clearTimeout(timerId.current);
-            fetchImage(imageUrls[selectedIndex])
-                .then((objectUrl) => setImageUrl(objectUrl))
-                .then(() => {
-                    timerId.current = setTimeout(setImage, 10000);
-                });
-        },
-        [selectedIndex]
-    );
-
-    useEffect(
-        callback,
-        [callback]
-    );
 
     return (
         <>
-            <div className="container">
-                <button onClick={() => handleSlide(-1)}>previous</button>
-                <Image imageUrl={imageUrl} />
-                <button onClick={() => handleSlide(1)}>next</button>
-            </div>
-            <div>{selectedIndex + 1} / {imageUrls.length}</div>
+            <Carousel
+                activeIndex={index}
+                onSelect={handleSelect}
+                interval={null}
+                variant='dark'
+            >
+                {imageUrls.map((url, i) =>
+                    <Carousel.Item key={url}>
+                        <AutoRefreshImage url={url} active={i === index} delay={delay} />
+                    </Carousel.Item>
+                )}
+            </Carousel>
         </>
     );
 }
